@@ -1,7 +1,9 @@
 'use strict';
 
+import "babel-polyfill";
 import React from 'react';
 import ReactDom from 'react-dom';
+import { getClientTimestampOffset, startTracingEvent, finishTracingEvent} from "../tracing";
 
 class TodoApp extends React.Component {
   constructor(props) {
@@ -14,14 +16,27 @@ class TodoApp extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    // Retrieving the client timestamp offset must be synchronous on page load, to ensure we have it
+    // available before starting the tracing span for the initial index page render.
+    const offset = await getClientTimestampOffset();
+    this.setState({clientTimestampOffset: offset});
     this.index();
   }
 
   index() {
-    fetch('/todos.json')
+    let tracingEvent = startTracingEvent('react-index', this.state.clientTimestampOffset);
+    fetch('/todos.json', {
+      headers: {
+        'X-Tracing-Trace-Id': tracingEvent.traceId,
+        'X-Tracing-Span-Id': tracingEvent.id,
+      },
+    })
       .then(response => response.json())
-      .then(json => this.setState({todos: json}));
+      .then(json => {
+        this.setState({todos: json});
+        finishTracingEvent(tracingEvent, this.state.clientTimestampOffset);
+      });
   }
 
   handleChange(event) {
@@ -54,6 +69,7 @@ class TodoApp extends React.Component {
     return (
       <div>
         <h1>Todos</h1>
+        <p>Client Timestamp Offset: {this.state.clientTimestampOffset}</p>
 
         <form onSubmit={this.handleSubmit}>
           <div className="field">

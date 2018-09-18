@@ -18,5 +18,8 @@ module HoneycombRailsFullstackTracing
 
     require 'middleware/honeycomb_tracing_middleware'
     config.middleware.insert_before Rack::Head, HoneycombTracingMiddleware
+
+    # This is not secure! In a real app you would not set this
+    config.action_controller.permit_all_parameters = true
   end
 end
