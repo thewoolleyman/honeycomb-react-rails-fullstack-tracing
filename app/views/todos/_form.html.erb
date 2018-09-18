@@ -1,4 +1,50 @@
-<%= form_with(model: todo, local: true) do |form| %>
+<%# See https://guides.rubyonrails.org/working_with_javascript_in_rails.html#rails-ujs-event-handlers %>
+<%= javascript_tag defer: 'defer' do -%>
+  function randomId() { // buffer is an ArrayBuffer
+    let buffer = new Uint8Array(15);
+    window.crypto.getRandomValues(buffer);
+    return Array.prototype.map.call(buffer, x => ('00' + x.toString(16)).slice(-2)).join('');
+  }
+
+  document.body.addEventListener('ajax:beforeSend', function(event) {
+    let xhr = event.detail[0];
+    let options = event.detail[1];
+    console.log("In form's ajax:beforeSend event listener.", xhr, options);
+    let trace_id = randomId();
+    let span_id = randomId();
+    let trace_event = {
+      name: options.type + ' ' + options.url,
+      id: span_id,
+      traceId: trace_id,
+      serviceName: "webClient"
+    };
+    // save the incomplete event
+    window.trace_events[trace_id] = trace_event;
+    xhr.foo = 'FOOBAR!';
+    xhr.setRequestHeader('X-Trace-Id', trace_id);
+    xhr.setRequestHeader('X-Trace-Span-Id', span_id);
+  });
+
+  function sendTracingEvent(event, metadata) {
+    let response = event.detail[0];
+    let status = event.detail[1];
+    let xhr = event.detail[2];
+    console.log('sendTracingEvent');
+    console.log(event);
+    console.log('------------------------');
+    console.log(response);
+    console.log(status);
+    console.log(xhr);
+    // let trace_event = window.trace_events[trace_id];
+    // let trace_events_json = JSON.stringify([trace_event]);
+  }
+
+  document.body.addEventListener('ajax:success', sendTracingEvent);
+  document.body.addEventListener('ajax:error', sendTracingEvent);
+
+<% end -%>
+
+<%= form_with(model: todo) do |form| %>
   <% if todo.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(todo.errors.count, "error") %> prohibited this todo from being saved:</h2>

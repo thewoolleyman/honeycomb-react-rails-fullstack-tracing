@@ -10,5 +10,6 @@ class ApplicationController < ActionController::Base
     with_span("#{controller_name}##{action_name}") do
       yield
     end
+    response.headers['X-Client-Trace-Id'] = Thread.current[:client_parent_span_id] if Thread.current[:client_parent_span_id]
   end
 end
