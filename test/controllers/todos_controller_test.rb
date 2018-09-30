@@ -27,22 +27,4 @@ class TodosControllerTest < ActionDispatch::IntegrationTest
     get todo_url(@todo)
     assert_response :success
   end
-
-  test "should get edit" do
-    get edit_todo_url(@todo)
-    assert_response :success
-  end
-
-  test "should update todo" do
-    patch todo_url(@todo), params: { todo: { text: @todo.text } }
-    assert_redirected_to todo_url(@todo)
-  end
-
-  test "should destroy todo" do
-    assert_difference('Todo.count', -1) do
-      delete todo_url(@todo)
-    end
-
-    assert_redirected_to todos_url
-  end
 end
