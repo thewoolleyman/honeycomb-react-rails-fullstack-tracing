@@ -20,24 +20,4 @@ class TodosTest < ApplicationSystemTestCase
     assert_text "Todo was successfully created"
     click_on "Back"
   end
-
-  test "updating a Todo" do
-    visit todos_url
-    click_on "Edit", match: :first
-
-    fill_in "Text", with: @todo.text
-    click_on "Update Todo"
-
-    assert_text "Todo was successfully updated"
-    click_on "Back"
-  end
-
-  test "destroying a Todo" do
-    visit todos_url
-    page.accept_confirm do
-      click_on "Destroy", match: :first
-    end
-
-    assert_text "Todo was successfully destroyed"
-  end
 end
