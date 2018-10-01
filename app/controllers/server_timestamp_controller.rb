@@ -1,5 +1,5 @@
 class ServerTimestampController < ApplicationController
   def show
-    render plain: DateTime.now.strftime('%Q')
+    render json: { server_timestamp: DateTime.now.strftime('%Q') }.as_json
   end
 end

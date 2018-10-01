@@ -2,6 +2,7 @@
 
 import React from 'react';
 import ReactDom from 'react-dom';
+import { getClientTimestampOffset} from "../tracing";
 
 class TodoApp extends React.Component {
   constructor(props) {
@@ -15,6 +16,7 @@ class TodoApp extends React.Component {
   }
 
   componentDidMount() {
+    getClientTimestampOffset(offset => this.setState({clientTimestampOffset: offset}));
     this.index();
   }
 
@@ -54,6 +56,7 @@ class TodoApp extends React.Component {
     return (
       <div>
         <h1>Todos</h1>
+        <p>Client Timestamp Offset: {this.state.clientTimestampOffset}</p>
 
         <form onSubmit={this.handleSubmit}>
           <div className="field">
