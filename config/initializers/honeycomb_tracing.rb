@@ -30,10 +30,10 @@ def with_span(name, metadata=nil)
 
   # Capture the calling scope's span ID, then restore it at the end of the
   # method.
-  parent_id = Thread.current[:span_id]
-  if parent_id
+  parent_span_id = Thread.current[:span_id]
+  if parent_span_id
     # We have a parent ID, so this is not the root span.
-    data[:parentId] = parent_id
+    data[:parentId] = parent_span_id
   end
 
   # Set the current span ID before invoking the provided block, then capture
@@ -63,5 +63,5 @@ def with_span(name, metadata=nil)
 
   ret
 ensure
-  Thread.current[:span_id] = parent_id
+  Thread.current[:span_id] = parent_span_id
 end

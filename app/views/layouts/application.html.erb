@@ -7,33 +7,6 @@
 
     <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
-
-    <%= javascript_tag defer: 'defer' do -%>
-      // initialize object to hold incomplete trace events while waiting on their requests to finish
-      window.trace_events = {};
-    <% end -%>
-
-    <%= javascript_tag defer: 'defer' do -%>
-      let req_start = performance.now();
-      Rails.ajax({
-        type: "GET",
-        url: "/server_timestamp",
-        success: function(response) {
-          // a rough approximation of client timestamp offset, accounting for latency, so
-          // that full-stack timestamps will be accurate
-          let req_end = performance.now();
-          let latency = req_end - req_start;
-          let server_timestamp = response;
-          let adjusted_server_timestamp = server_timestamp * 1 + (latency / 2);
-          let client_timestamp = Date.now();
-          let client_timestamp_offset = client_timestamp - adjusted_server_timestamp
-          window.client_timestamp_offset = client_timestamp_offset;
-        },
-        error: function(response){
-          console.error(response);
-        }
-      })
-    <% end -%>
   </head>
 
   <body>

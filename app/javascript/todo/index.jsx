@@ -1,8 +1,9 @@
 'use strict';
 
+import "babel-polyfill";
 import React from 'react';
 import ReactDom from 'react-dom';
-import { getClientTimestampOffset} from "../tracing";
+import { getClientTimestampOffset, startTracingEvent, finishTracingEvent} from "../tracing";
 
 class TodoApp extends React.Component {
   constructor(props) {
@@ -15,15 +16,27 @@ class TodoApp extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentDidMount() {
-    getClientTimestampOffset(offset => this.setState({clientTimestampOffset: offset}));
+  async componentDidMount() {
+    // Retrieving the client timestamp offset must be synchronous on page load, to ensure we have it
+    // available before starting the tracing span for the initial index page render.
+    const offset = await getClientTimestampOffset();
+    this.setState({clientTimestampOffset: offset});
     this.index();
   }
 
   index() {
-    fetch('/todos.json')
+    let tracingEvent = startTracingEvent('index', this.state.clientTimestampOffset);
+    fetch('/todos.json', {
+      headers: {
+        'X-Tracing-Trace-Id': tracingEvent.traceId,
+        'X-Tracing-Span-Id': tracingEvent.spanId,
+      },
+    })
       .then(response => response.json())
-      .then(json => this.setState({todos: json}));
+      .then(json => {
+        this.setState({todos: json});
+        finishTracingEvent(tracingEvent);
+      });
   }
 
   handleChange(event) {
@@ -43,6 +56,7 @@ class TodoApp extends React.Component {
     })
       .then(response => response.json())
       .then(json => {
+        console.log('in doHandleSubmit fetch callback');
         this.setState(state => ({
             newTodoText: '',
             todos: [...state.todos, json],
