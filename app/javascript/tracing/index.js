@@ -32,6 +32,8 @@ export function startTracingEvent(name, clientTimestampOffset, parentId) {
 }
 
 export function finishTracingEvent(tracingEvent) {
+  // TODO: add durationMs
+  // TODO: Call server proxy method to submit event
   console.log('finishTracingEvent',tracingEvent);
 }
 
