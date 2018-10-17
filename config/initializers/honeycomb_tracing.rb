@@ -47,21 +47,25 @@ def with_span(name, metadata=nil)
     data.merge!(metadata)
   end
 
-  writekey = ENV.fetch('HONEYCOMB_WRITEKEY') unless ENV['DISABLE_HONEYCOMB'] # to start rails without internet
-  libhoney_client = Libhoney::Client.new(
-    writekey: writekey,
-    dataset: ENV.fetch('HONEYCOMB_DATASET','rails-fullstack-tracing')
-  )
-  ev = libhoney_client.event
   # NOTE: Don't forget to set the timestamp to `start` -- because spans are
   # emitted at the *end* of their execution, we want to be doubly sure that
   # our manually-emitted events are timestamped with the time that the work
   # (the span's actual execution) really begun.
-  ev.timestamp = start
-  ev.add(data)
-  ev.send
+  send_event(data, start)
 
   ret
 ensure
   Thread.current[:span_id] = parent_span_id
+end
+
+def send_event(data, timestamp)
+  writekey = ENV.fetch('HONEYCOMB_WRITEKEY') unless ENV['DISABLE_HONEYCOMB'] # to start rails without internet
+  libhoney_client = Libhoney::Client.new(
+    writekey: writekey,
+    dataset: ENV.fetch('HONEYCOMB_DATASET', 'rails-fullstack-tracing')
+  )
+  ev = libhoney_client.event
+  ev.timestamp = timestamp
+  ev.add(data)
+  ev.send
 end
